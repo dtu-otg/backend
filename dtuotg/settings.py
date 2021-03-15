@@ -28,7 +28,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 DEBUG = os.getenv('DEBUG')
 
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['0.0.0.0', 'localhost', '127.0.0.1', 'dtu-otg.herokuapp.com']
 
 AUTH_USER_MODEL = 'user.User'
 # Application definition
@@ -93,16 +93,16 @@ SWAGGER_SETTINGS = {
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': os.getenv('DB_HOST'),
-        'PORT': os.getenv('DB_PORT'),
-    }
-}
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql_psycopg2',
+#         # 'NAME': os.getenv('DB_NAME'),
+#         # 'USER': os.getenv('DB_USER'),
+#         # 'PASSWORD': os.getenv('DB_PASSWORD'),
+#         # 'HOST': os.getenv('DB_HOST'),
+#         # 'PORT': os.getenv('DB_PORT'),
+#     }
+# }
 
 
 # Password validation
@@ -165,3 +165,6 @@ EMAIL_USE_SSL = False
 EMAIL_PORT = 587
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+
+import dj_database_url
+DATABASES = { 'default': dj_database_url.config() }
