@@ -43,6 +43,7 @@ INSTALLED_APPS = [
 
     #local
     'user',
+    'social_auth',
 
     #installed
     'rest_framework',

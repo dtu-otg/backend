@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from rest_framework.serializers import SerializerMethodField
-from .models import User
+from .models import User,Profile
 from django.contrib import auth
 from rest_framework.exceptions import AuthenticationFailed,ValidationError
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
@@ -60,9 +60,9 @@ class LoginSerializer(serializers.ModelSerializer):
             'access': user.tokens()['access']
         }
     def get_first_time_login(self,obj):
-        # qs = Profile.objects.get(owner__username = obj['username'])
-        # if qs.name is None:
-        #     return True
+        qs = Profile.objects.get(owner__username = obj['username'])
+        if qs.name is None:
+            return True
         return False
 
 
@@ -176,3 +176,21 @@ class SetNewPasswordSerializer(serializers.Serializer):
         except Exception as e:
             raise AuthenticationException('The reset link is invalid')
         return super().validate(attrs)
+
+
+class ProfileSerializer(serializers.ModelSerializer):
+    name = serializers.CharField()
+    roll_no = serializers.CharField()
+    branch = serializers.CharField()
+    year = serializers.CharField()
+    batch = serializers.CharField()
+    class Meta:
+        model = Profile
+        fields = ['name','roll_no','branch','year','batch',]
+
+class PasswordChangeSerializer(serializers.Serializer):
+    old_pass = serializers.CharField(max_length = 68,min_length = 6,required=True)
+    new_pass = serializers.CharField(max_length = 68,min_length = 6,required=True)
+
+    class Meta:
+        fields = ['old_pass','new_pass']

@@ -35,6 +35,7 @@ class User(AbstractBaseUser,PermissionsMixin):
     is_verified = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
+    can_host = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now = True)
     auth_provider = models.CharField(
@@ -58,3 +59,22 @@ class User(AbstractBaseUser,PermissionsMixin):
             'refresh':str(refresh),
             'access': str(refresh.access_token),
         }
+
+
+class Profile(models.Model):
+    owner = models.OneToOneField(User,on_delete = models.CASCADE)
+    name = models.CharField(max_length=200,null=True,blank=True)
+    roll_no = models.CharField(max_length=15,null=True,blank=True)
+    branch = models.CharField(max_length=100,null = True,blank=True)
+    year = models.IntegerField(null = True,blank=True)
+    batch = models.CharField(max_length=5,null = True,blank=True)
+    created_at = models.DateTimeField(auto_now_add=True,null = True,blank=True)
+    updated_at = models.DateTimeField(auto_now = True,null = True,blank=True)
+
+    def __str__(self):
+        return str(self.owner) + "'s Profile"
+
+    @receiver(post_save, sender=User)
+    def create_Profile(sender, instance, created, **kwargs):
+        if created:
+            Profile.objects.create(owner=instance)

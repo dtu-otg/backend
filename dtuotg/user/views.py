@@ -2,16 +2,18 @@ from django.shortcuts import render
 from rest_framework import generics,status,permissions,views
 from .serializers import (
     RegisterSerializer,
+    ProfileSerializer,
     EmailVerificationSerializer,
     LoginSerializer,
     RequestPasswordResetEmailSeriliazer,
     ResetPasswordEmailRequestSerializer,
     SetNewPasswordSerializer,
     SendEmailVerificationSerializer,
+    PasswordChangeSerializer
     )
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import User
+from .models import User,Profile
 from .utils import Util
 from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
@@ -139,7 +141,7 @@ class SendVerificationMail(generics.GenericAPIView):
         email_body['username'] = user.username
         email_body['message'] = 'Verify your email'
         email_body['link'] = absurl
-        data = {'email_body' : email_body,'email_subject' : 'Codedigger - Email Verification','to_email' : user.email}
+        data = {'email_body' : email_body,'email_subject' : 'DtuOtg - Email Verification','to_email' : user.email}
         Util.send_email(data)
         return Response({'status' : 'OK','result' :'A Verification Email has been sent'},status = status.HTTP_200_OK)
 
@@ -170,7 +172,7 @@ class RequestPasswordResetEmail(generics.GenericAPIView):
             email_body['message'] = 'Reset your Password'
             email_body['link'] = absurl + "?redirect_url="+redirect_url
             data = {'email_body': email_body, 'to_email': user.email,
-                    'email_subject': 'Codedigger - Password Reset'}
+                    'email_subject': 'Dtuotg - Password Reset'}
             Util.send_email(data)
         return Response({'status': 'OK','result' :'We have sent you a link to reset your password'}, status=status.HTTP_200_OK)
 
@@ -221,3 +223,60 @@ class SetNewPasswordAPIView(generics.GenericAPIView):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         return Response({'status': 'OK', 'result': 'Password reset success'}, status=status.HTTP_200_OK)
+
+
+class ProfileGetView(ListAPIView):
+    serializer_class = ProfileSerializer
+    permission_classes = [Authenticated,IsOwner]
+    queryset = Profile.objects.all()
+
+    def get_queryset(self):
+        return self.queryset.filter(owner=self.request.user)
+
+class ProfileUpdateView(UpdateAPIView):
+    serializer_class = ProfileSerializer
+    permission_classes = [Authenticated,IsOwner]
+    queryset = Profile.objects.all()
+    lookup_field = "owner_id__username"
+
+    def get_serializer_context(self,**kwargs):
+        data = super().get_serializer_context(**kwargs)
+        data['user'] = self.request.user.username
+        return data
+
+    def get_queryset(self):
+        return self.queryset.filter(owner=self.request.user)
+
+    def perform_update(self,serializer):
+        uva = self.request.data.get('uva_handle',None)
+        if uva == None:
+            return serializer.save()
+        ele = get_uva(uva)
+        if int(ele) > 0:
+            return serializer.save(uva_id = ele)
+        else:
+            return serializer.save()
+
+class ChangePassword(generics.GenericAPIView):
+    permission_classes = [Authenticated]
+    serializer_class = PasswordChangeSerializer
+
+    def post(self,request,*args,**kwargs):
+        """
+        Endpoint for changing the password
+        """
+        data = request.data
+        old_pass = data.get('old_pass',None)
+        new_pass = data.get('new_pass',None)
+        if old_pass is None or new_pass is None:
+            return Response({'status' : 'FAILED','error' :'Either the old or new password was not provided'},status=status.HTTP_400_BAD_REQUEST)
+        user = authenticate(username=self.request.user.username,password=old_pass)
+        if new_pass == old_pass:
+            return Response({'status' : 'FAILED','error' :"The new password is same as the old password"},status=status.HTTP_400_BAD_REQUEST)
+        if len(new_pass) < 6:
+            return Response({'status' : 'FAILED','error' :"The password is too short, should be of minimum length 6"},status=status.HTTP_400_BAD_REQUEST)
+        if user is None:
+            return Response({'status' : 'FAILED','error' :"Wrong Password"},status=status.HTTP_400_BAD_REQUEST)
+        user.set_password(new_pass)
+        user.save()
+        return Response({'status' : 'OK','result' :"Password Change Complete"},status=status.HTTP_200_OK)
