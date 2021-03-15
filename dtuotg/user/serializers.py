@@ -60,9 +60,9 @@ class LoginSerializer(serializers.ModelSerializer):
             'access': user.tokens()['access']
         }
     def get_first_time_login(self,obj):
-        qs = Profile.objects.get(owner__username = obj['username'])
-        if qs.name is None:
-            return True
+        # qs = Profile.objects.get(owner__username = obj['username'])
+        # if qs.name is None:
+        #     return True
         return False
 
 

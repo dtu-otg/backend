@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 
 from pathlib import Path
-import os
+import os,datetime
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -141,6 +141,21 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 STATIC_URL = '/static/'
+
+REST_FRAMEWORK = {
+    'NON_FIELD_ERRORS_KEY' : 'error',
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    )
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': datetime.timedelta(days=30),
+    'REFRESH_TOKEN_LIFETIME': datetime.timedelta(days=60),
+}
+
+
+
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"

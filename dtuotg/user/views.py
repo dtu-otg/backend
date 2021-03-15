@@ -62,11 +62,11 @@ class RegisterView(generics.GenericAPIView):
         email_body['username'] = user.username
         email_body['message'] = 'Verify your email'
         email_body['link'] = absurl
-        data = {'email_body' : email_body,'email_subject' : 'Codedigger - Email Confirmation','to_email' : user.email}
+        data = {'email_body' : email_body,'email_subject' : 'DtuOtg - Email Confirmation','to_email' : user.email}
         Util.send_email(data)
         return Response({'status' : "OK",'result': user_data},status = status.HTTP_201_CREATED)
 
-
+algorithm = "HS256"
 class VerifyEmail(views.APIView):
     serializer_class = EmailVerificationSerializer
     
@@ -82,7 +82,7 @@ class VerifyEmail(views.APIView):
         if redirect_url is None:
             redirect_url = os.getenv('EMAIL_REDIRECT')
         try:
-            payload = jwt.decode(token,settings.SECRET_KEY)
+            payload = jwt.decode(token,settings.SECRET_KEY,algorithms = [algorithm])
             user = User.objects.get(id=payload['user_id'])
             if not user.is_verified:
                 user.is_verified = True
