@@ -80,12 +80,17 @@ class VerifyEmail(views.APIView):
         Endpoint for verification of the mail
         """
         token = request.GET.get('token')
+        official = request.GET.get('official',None)
+        print(official)
         redirect_url = request.GET.get('redirect_url',None)
         if redirect_url is None:
             redirect_url = os.getenv('EMAIL_REDIRECT')
         try:
             payload = jwt.decode(token,settings.SECRET_KEY,algorithms = [algorithm])
             user = User.objects.get(id=payload['user_id'])
+            if not user.dtu_email and official == 'True':
+                user.dtu_email = True
+                user.save()
             if not user.is_verified:
                 user.is_verified = True
                 user.save()
@@ -242,6 +247,7 @@ class ProfileUpdateView(UpdateAPIView):
     def get_serializer_context(self,**kwargs):
         data = super().get_serializer_context(**kwargs)
         data['user'] = self.request.user.username
+        data['current_site'] = get_current_site(self.request).domain
         return data
 
     def get_queryset(self):

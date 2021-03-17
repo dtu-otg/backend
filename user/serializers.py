@@ -12,7 +12,8 @@ from .utils import Util
 import requests,json
 from .exception import *
 import re
-
+from django.contrib.sites.shortcuts import get_current_site
+from django.urls import reverse
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -178,15 +179,80 @@ class SetNewPasswordSerializer(serializers.Serializer):
         return super().validate(attrs)
 
 
+branches = [
+    'bt','ce','co','ee','ec','en','ep','it','me','ae','mc','pe','pt','se','bd'
+]
+
 class ProfileSerializer(serializers.ModelSerializer):
     name = serializers.CharField()
     roll_no = serializers.CharField()
     branch = serializers.CharField()
-    year = serializers.CharField()
-    batch = serializers.CharField()
+    year = serializers.IntegerField()
+    batch = serializers.CharField(allow_blank = True)
+    dtu_mail_sent = serializers.SerializerMethodField()
+
+    def get_dtu_mail_sent(self,obj):
+        curr_user = self.context.get('user')
+        user = User.objects.get(username=curr_user)
+        name_here = obj.name.lower()
+        roll_no_here = obj.roll_no[:4] + obj.roll_no[5:7] + obj.roll_no[8:]
+        email_here = name_here.replace(" ","") + '_' + roll_no_here + '@dtu.ac.in'
+        if email_here == user.email or user.dtu_email:
+            if user.dtu_email:
+                return False
+            user.dtu_email = True
+            user.save()
+            return False
+        current_site = self.context.get('current_site',None)
+        relative_link = reverse('email-verify')
+        #redirect_url = request.GET.get('redirect_url',None)
+        token = RefreshToken.for_user(user).access_token
+        absurl = 'https://' + current_site + relative_link + "?token=" + str(token) + '&official=True'
+        email_body = {}
+        email_body['username'] = user.username
+        email_body['message'] = 'Verify your official dtu email-id'
+        email_body['link'] = absurl
+        data = {'email_body' : email_body,'email_subject' : 'DtuOtg - Dtu-Email Verification','to_email' : email_here}
+        Util.send_email(data)
+        return "A Verification mail has been sent to the offical DTU-Email ID"
+
+    def validate_roll_no(self,obj):
+        curr_user = self.context.get('user')
+        user = User.objects.get(username=curr_user)
+        if len(obj) != 11:
+            raise ValidationException('Roll Number is not in proper format')
+        if str(obj[:2]) != '2k':
+            raise ValidationException('Roll Number is not in proper format')
+        if str(obj[5:7]) not in branches:
+            raise ValidationException('Roll Number is not in proper format')
+        if int(obj[8:]) == 0:
+            raise ValidationException('Roll Number is not in proper format')
+        return obj
+
+    def validate_year(self,obj):
+        if obj >= 2000 and obj < 2050:
+            return obj
+        raise ValidationException('Year is not valid')
+
+    def validate_batch(self,obj):
+        if obj == None or obj == "":
+            return obj
+        if len(obj) != 2:
+            raise ValidationException('Batch is not correct')
+        if obj[:1].lower() < 'a' or obj[:1].lower() > 'b':
+            raise ValidationException('Batch is not correct')
+        if int(obj[1:]) == 0 or int(obj[1:]) > 16:
+            raise ValidationException('Batch is not correct')
+        return obj
+    
+    def validate_branch(self,obj):
+        if obj.lower() not in branches:
+            raise ValidationException('Invalid Branch')
+        return obj.upper()
+
     class Meta:
         model = Profile
-        fields = ['name','roll_no','branch','year','batch',]
+        fields = ['name','roll_no','branch','year','batch','dtu_mail_sent']
 
 class PasswordChangeSerializer(serializers.Serializer):
     old_pass = serializers.CharField(max_length = 68,min_length = 6,required=True)

@@ -36,6 +36,7 @@ class User(AbstractBaseUser,PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     can_host = models.BooleanField(default=False)
+    dtu_email = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now = True)
     auth_provider = models.CharField(
@@ -64,7 +65,7 @@ class User(AbstractBaseUser,PermissionsMixin):
 class Profile(models.Model):
     owner = models.OneToOneField(User,on_delete = models.CASCADE)
     name = models.CharField(max_length=200,null=True,blank=True)
-    roll_no = models.CharField(max_length=15,null=True,blank=True)
+    roll_no = models.CharField(max_length=50,null=True,blank=True)
     branch = models.CharField(max_length=100,null = True,blank=True)
     year = models.IntegerField(null = True,blank=True)
     batch = models.CharField(max_length=5,null = True,blank=True)
