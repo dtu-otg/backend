@@ -235,6 +235,11 @@ class ProfileGetView(ListAPIView):
     permission_classes = [Authenticated,IsOwner]
     queryset = Profile.objects.all()
 
+    def get_serializer_context(self,**kwargs):
+        data = super().get_serializer_context(**kwargs)
+        data['user'] = self.request.user.username
+        return data
+
     def get_queryset(self):
         return self.queryset.filter(owner=self.request.user)
 
