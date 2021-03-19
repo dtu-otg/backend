@@ -220,11 +220,11 @@ class ProfileSerializer(serializers.ModelSerializer):
         curr_user = self.context.get('user')
         user = User.objects.get(username=curr_user)
         if len(obj) != 11:
-            raise ValidationException('Roll Number is not in proper format')
-        if str(obj[:2]) != '2k':
-            raise ValidationException('Roll Number is not in proper format')
-        if str(obj[5:7]) not in branches:
-            raise ValidationException('Roll Number is not in proper format')
+            raise ValidationException('Roll Number is not in proper format, length ' + str(len(obj)) + ' expected : 11')
+        if str(obj[:2]) != '2k' and str(obj[:2]) != '2K':
+            raise ValidationException('Roll Number is not in proper format, 2K....')
+        if str(obj[5:7]).lower() not in branches:
+            raise ValidationException('Roll Number is not in proper format, branch not found')
         if int(obj[8:]) == 0:
             raise ValidationException('Roll Number is not in proper format')
         return obj
