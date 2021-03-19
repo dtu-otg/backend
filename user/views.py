@@ -235,6 +235,10 @@ class ProfileGetView(ListAPIView):
     permission_classes = [Authenticated,IsOwner]
     queryset = Profile.objects.all()
 
+    def get_serializer_context(self,**kwargs):
+        data = super().get_serializer_context(**kwargs)
+        data['user'] = self.request.user.username
+        return data
     def get_queryset(self):
         return self.queryset.filter(owner=self.request.user)
 
@@ -252,16 +256,6 @@ class ProfileUpdateView(UpdateAPIView):
 
     def get_queryset(self):
         return self.queryset.filter(owner=self.request.user)
-
-    def perform_update(self,serializer):
-        uva = self.request.data.get('uva_handle',None)
-        if uva == None:
-            return serializer.save()
-        ele = get_uva(uva)
-        if int(ele) > 0:
-            return serializer.save(uva_id = ele)
-        else:
-            return serializer.save()
 
 class ChangePassword(generics.GenericAPIView):
     permission_classes = [Authenticated]
