@@ -20,4 +20,25 @@ class GetEventsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Event
-        fields = ('owner','name','latitude','longitude','description','date_time','duration','type_event')
+        fields = ('id','owner','name','latitude','longitude','description','date_time','duration','type_event')
+
+class RegistrationEventSerializer(serializers.Serializer):
+    username = serializers.CharField(required=True)
+    event_id = serializers.CharField(required=True)
+
+    class Meta:
+        fields = ('username','event_id',)
+
+
+class CreateEventSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(required=True)
+    description = serializers.CharField(required = True)
+    date_time = serializers.DateTimeField(required=True)
+    duration = serializers.DurationField(required=True)
+    latitude = serializers.DecimalField(required=True,max_digits = 15,decimal_places=9)
+    longitude = serializers.DecimalField(required=True,max_digits = 15,decimal_places=9)
+
+
+    class Meta:
+        model = Event
+        fields = ('owner','name','description','date_time','duration','latitude','longitude','type_event')
