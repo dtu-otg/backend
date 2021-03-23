@@ -7,5 +7,5 @@ class Util:
     @staticmethod
     def send_email(data):
         subject = data['email_subject']
-        body = "Hi, " + data['email_body']['username'] + ". " + data['email_body']['message'] + " by using this link : " + data['email_body']['link']
+        body = "Hi, " + data['email_body']['username'] + ". " + data['email_body']['message'] + " by using this code : " + str(data['email_body']['code']) + " which will expire in 30 minutes"
         send_mail(subject,body,EMAIL_HOST_USER,[data['to_email']])

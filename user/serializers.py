@@ -29,6 +29,8 @@ class RegisterSerializer(serializers.ModelSerializer):
 
         if not username.isalnum():
             raise ValidationException("The username should only contain alphanumeric characters")
+        if email[len(email)-10:].lower() != "@dtu.ac.in":
+            raise ValidationException("This email does not belong to DTU ")
         return attrs
     
     def create(self,validated_data):
@@ -36,10 +38,12 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 
 class EmailVerificationSerializer(serializers.ModelSerializer):
-    token = serializers.CharField(max_length = 555)
+    username = serializers.CharField(required=True)
+    code = serializers.IntegerField(required= True)
+
     class Meta:
         model = User
-        fields = ['token']
+        fields = ['username','code']
 
 class SendEmailVerificationSerializer(serializers.Serializer):
     email = serializers.EmailField(max_length=255,required=True)
@@ -190,32 +194,32 @@ class ProfileSerializer(serializers.ModelSerializer):
     branch = serializers.CharField()
     year = serializers.IntegerField()
     batch = serializers.CharField(allow_blank = True)
-    dtu_mail_sent = serializers.SerializerMethodField()
+    # dtu_mail_sent = serializers.SerializerMethodField()
 
-    def get_dtu_mail_sent(self,obj):
-        curr_user = self.context.get('user')
-        user = User.objects.get(username=curr_user)
-        name_here = obj.name.lower()
-        roll_no_here = obj.roll_no[:4] + obj.roll_no[5:7] + obj.roll_no[8:]
-        email_here = name_here.replace(" ","") + '_' + roll_no_here + '@dtu.ac.in'
-        if email_here == user.email or user.dtu_email:
-            if user.dtu_email:
-                return False
-            user.dtu_email = True
-            user.save()
-            return False
-        current_site = self.context.get('current_site',None)
-        relative_link = reverse('email-verify')
-        #redirect_url = request.GET.get('redirect_url',None)
-        token = RefreshToken.for_user(user).access_token
-        absurl = 'https://' + current_site + relative_link + "?token=" + str(token) + '&official=True'
-        email_body = {}
-        email_body['username'] = user.username
-        email_body['message'] = 'Verify your official dtu email-id'
-        email_body['link'] = absurl
-        data = {'email_body' : email_body,'email_subject' : 'DtuOtg - Dtu-Email Verification','to_email' : email_here}
-        Util.send_email(data)
-        return "A Verification mail has been sent to the offical DTU-Email ID"
+    # def get_dtu_mail_sent(self,obj):
+    #     curr_user = self.context.get('user')
+    #     user = User.objects.get(username=curr_user)
+    #     name_here = obj.name.lower()
+    #     roll_no_here = obj.roll_no[:4] + obj.roll_no[5:7] + obj.roll_no[8:]
+    #     email_here = name_here.replace(" ","") + '_' + roll_no_here + '@dtu.ac.in'
+    #     if email_here == user.email or user.dtu_email:
+    #         if user.dtu_email:
+    #             return False
+    #         user.dtu_email = True
+    #         user.save()
+    #         return False
+    #     current_site = self.context.get('current_site',None)
+    #     relative_link = reverse('email-verify')
+    #     #redirect_url = request.GET.get('redirect_url',None)
+    #     token = RefreshToken.for_user(user).access_token
+    #     absurl = 'https://' + current_site + relative_link + "?token=" + str(token) + '&official=True'
+    #     email_body = {}
+    #     email_body['username'] = user.username
+    #     email_body['message'] = 'Verify your official dtu email-id'
+    #     email_body['link'] = absurl
+    #     data = {'email_body' : email_body,'email_subject' : 'DtuOtg - Dtu-Email Verification','to_email' : email_here}
+    #     Util.send_email(data)
+    #     return "A Verification mail has been sent to the offical DTU-Email ID"
 
     def validate_roll_no(self,obj):
         curr_user = self.context.get('user')

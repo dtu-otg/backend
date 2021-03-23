@@ -18,7 +18,7 @@ from .utils import Util
 from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
 from django.conf import settings  
-import jwt , json
+import jwt , json, pytz
 from .permissions import *
 from rest_framework.generics import RetrieveAPIView
 from drf_yasg.utils import swagger_auto_schema
@@ -33,9 +33,11 @@ from .utils import Util
 from django.shortcuts import redirect
 from django.http import HttpResponsePermanentRedirect
 from django.contrib.auth import authenticate
-import os
+import os,random
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
+from datetime import datetime,timedelta
+from django.utils import timezone
 
 class RegisterView(generics.GenericAPIView):
     serializer_class = RegisterSerializer
@@ -51,55 +53,90 @@ class RegisterView(generics.GenericAPIView):
         user_data = serializer.data
         user = User.objects.get(email=user_data['email'])
 
-        token = RefreshToken.for_user(user).access_token
+        # token = RefreshToken.for_user(user).access_token
 
-        current_site = get_current_site(request).domain
+        # current_site = get_current_site(request).domain
 
-        relative_link = reverse('email-verify')
-        redirect_url = request.GET.get('redirect_url',None)
-        absurl = 'https://' + current_site + relative_link + "?token=" + str(token)
-        if redirect_url != None:
-            absurl += "&redirect_url=" + redirect_url
+        # relative_link = reverse('email-verify')
+        # redirect_url = request.GET.get('redirect_url',None)
+        # absurl = 'https://' + current_site + relative_link + "?token=" + str(token)
+        # if redirect_url != None:
+        #     absurl += "&redirect_url=" + redirect_url
+        verify_code = random.randint(0,999999)
+        ele = datetime.now()
+        user.code = verify_code
+        user.time_code = ele + timedelta(minutes=30)
+        user.save()
         email_body = {}
         email_body['username'] = user.username
         email_body['message'] = 'Verify your email'
-        email_body['link'] = absurl
+        email_body['code'] =  verify_code
         data = {'email_body' : email_body,'email_subject' : 'DtuOtg - Email Confirmation','to_email' : user.email}
         Util.send_email(data)
         return Response({'status' : "OK",'result': user_data},status = status.HTTP_201_CREATED)
 
-algorithm = "HS256"
-class VerifyEmail(views.APIView):
-    serializer_class = EmailVerificationSerializer
+# algorithm = "HS256"
+# class VerifyEmail(views.APIView):
+#     serializer_class = EmailVerificationSerializer
     
-    token_param_config = openapi.Parameter(
-        'token', in_=openapi.IN_QUERY, description='Description', type=openapi.TYPE_STRING)
-    @swagger_auto_schema(manual_parameters=[token_param_config])
-    def get(self,request):
+#     token_param_config = openapi.Parameter(
+#         'token', in_=openapi.IN_QUERY, description='Description', type=openapi.TYPE_STRING)
+#     @swagger_auto_schema(manual_parameters=[token_param_config])
+#     def get(self,request):
+#         """
+#         Endpoint for verification of the mail
+#         """
+#         token = request.GET.get('token')
+#         official = request.GET.get('official',None)
+#         print(official)
+#         redirect_url = request.GET.get('redirect_url',None)
+#         if redirect_url is None:
+#             redirect_url = os.getenv('EMAIL_REDIRECT')
+#         try:
+#             payload = jwt.decode(token,settings.SECRET_KEY,algorithms = [algorithm])
+#             user = User.objects.get(id=payload['user_id'])
+#             if not user.dtu_email and official == 'True':
+#                 user.dtu_email = True
+#                 user.save()
+#             if not user.is_verified:
+#                 user.is_verified = True
+#                 user.save()
+#             return redirect(redirect_url + '?email=SuccessfullyActivated')
+#         except jwt.ExpiredSignatureError as identifier:
+#             return redirect(redirect_url + '?email=ActivationLinkExpired')
+#         except jwt.exceptions.DecodeError as identifier:
+#             return redirect(redirect_url + '?email=InvalidToken')
+
+class VerifyEmailCode(generics.GenericAPIView):
+    serializer_class = EmailVerificationSerializer
+    def post(self,request):
         """
         Endpoint for verification of the mail
         """
-        token = request.GET.get('token')
-        official = request.GET.get('official',None)
-        print(official)
-        redirect_url = request.GET.get('redirect_url',None)
-        if redirect_url is None:
-            redirect_url = os.getenv('EMAIL_REDIRECT')
-        try:
-            payload = jwt.decode(token,settings.SECRET_KEY,algorithms = [algorithm])
-            user = User.objects.get(id=payload['user_id'])
-            if not user.dtu_email and official == 'True':
-                user.dtu_email = True
-                user.save()
-            if not user.is_verified:
-                user.is_verified = True
-                user.save()
-            return redirect(redirect_url + '?email=SuccessfullyActivated')
-        except jwt.ExpiredSignatureError as identifier:
-            return redirect(redirect_url + '?email=ActivationLinkExpired')
-        except jwt.exceptions.DecodeError as identifier:
-            return redirect(redirect_url + '?email=InvalidToken')
-
+        data = request.data
+        code = data.get('code',None)
+        username = data.get('username',None)
+        if code is None:
+            return Response({'status' : 'Failed',"result" : "Code has not been provided"},status=status.HTTP_400_BAD_REQUEST) 
+        if username is None:
+            return Response({'status' : 'Failed',"result" : "Username has not been provided"},status=status.HTTP_400_BAD_REQUEST)
+        if not User.objects.filter(username=username).exists():
+            return Response({'status' : 'Failed',"result" : "Username is not valid"},status=status.HTTP_400_BAD_REQUEST)
+        user = User.objects.get(username=username)
+        if user.is_verified == True:
+            return Response({'status' : 'OK',"result" : "You are already verified"},status=status.HTTP_400_BAD_REQUEST)
+        now = datetime.now()
+        ist = pytz.timezone('Asia/Calcutta')
+        start_time = now.replace(tzinfo=ist)
+        print(start_time)
+        if user.code == code:
+            if start_time <= user.time_code.replace(tzinfo=ist):
+                return Response({'status' : 'Failed',"result" : "Code has expired"},status=status.HTTP_400_BAD_REQUEST)   
+            user.is_verified = True
+            user.save()
+            return Response({'status' : 'OK',"result" : "You have been verified"},status=status.HTTP_200_OK) 
+        else:
+            return Response({'status' : 'Failed',"result" : "Incorrect code"},status=status.HTTP_400_BAD_REQUEST)
 
 class LoginApiView(generics.GenericAPIView):
     serializer_class = LoginSerializer
