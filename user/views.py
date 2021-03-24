@@ -52,16 +52,6 @@ class RegisterView(generics.GenericAPIView):
         serializer.save()
         user_data = serializer.data
         user = User.objects.get(email=user_data['email'])
-
-        # token = RefreshToken.for_user(user).access_token
-
-        # current_site = get_current_site(request).domain
-
-        # relative_link = reverse('email-verify')
-        # redirect_url = request.GET.get('redirect_url',None)
-        # absurl = 'https://' + current_site + relative_link + "?token=" + str(token)
-        # if redirect_url != None:
-        #     absurl += "&redirect_url=" + redirect_url
         verify_code = random.randint(0,999999)
         ele = datetime.now()
         user.code = verify_code
@@ -125,12 +115,13 @@ class VerifyEmailCode(generics.GenericAPIView):
         user = User.objects.get(username=username)
         if user.is_verified == True:
             return Response({'status' : 'OK',"result" : "You are already verified"},status=status.HTTP_400_BAD_REQUEST)
-        now = datetime.now()
-        ist = pytz.timezone('Asia/Calcutta')
-        start_time = now.replace(tzinfo=ist)
-        print(start_time)
+        now = timezone.now()
+        utc = pytz.utc
+        start_time = now.replace(tzinfo=utc)
+        # print(start_time)
+        # print(user.time_code)
         if user.code == code:
-            if start_time <= user.time_code.replace(tzinfo=ist):
+            if start_time >= user.time_code.replace(tzinfo=utc):
                 return Response({'status' : 'Failed',"result" : "Code has expired"},status=status.HTTP_400_BAD_REQUEST)   
             user.is_verified = True
             user.save()
@@ -172,17 +163,15 @@ class SendVerificationMail(generics.GenericAPIView):
         if not User.objects.filter(email = email).exists():
             return Response({'status' : 'FAILED','error' :'The given email does not exist'},status = status.HTTP_400_BAD_REQUEST)
         user = User.objects.get(email=email)
-        token = RefreshToken.for_user(user).access_token
-        current_site = get_current_site(request).domain
-        relative_link = reverse('email-verify')
-        redirect_url = request.GET.get('redirect_url',None)
-        absurl = 'https://' + current_site + relative_link + "?token=" + str(token)
-        if redirect_url != None:
-            absurl += "&redirect_url=" + redirect_url
+        verify_code = random.randint(0,999999)
+        ele = datetime.now()
+        user.code = verify_code
+        user.time_code = ele + timedelta(minutes=30)
+        user.save()
         email_body = {}
         email_body['username'] = user.username
         email_body['message'] = 'Verify your email'
-        email_body['link'] = absurl
+        email_body['code'] = verify_code
         data = {'email_body' : email_body,'email_subject' : 'DtuOtg - Email Verification','to_email' : user.email}
         Util.send_email(data)
         return Response({'status' : 'OK','result' :'A Verification Email has been sent'},status = status.HTTP_200_OK)

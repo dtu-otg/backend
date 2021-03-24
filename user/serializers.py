@@ -257,7 +257,7 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ['name','roll_no','branch','year','batch','dtu_mail_sent']
+        fields = ['name','roll_no','branch','year','batch',]
 
 class PasswordChangeSerializer(serializers.Serializer):
     old_pass = serializers.CharField(max_length = 68,min_length = 6,required=True)
