@@ -22,6 +22,11 @@ class GetEventsView(generics.ListAPIView):
         if social != None:
             q |= Q(type_list = '3')
         return qs.filter(q).order_by('date_time')
+
+    def get_serializer_context(self,**kwargs):
+        data = super().get_serializer_context(**kwargs)
+        data['user'] = self.request.user.username
+        return data
         
 
 class RegisterForEventView(generics.GenericAPIView):
@@ -43,6 +48,24 @@ class RegisterForEventView(generics.GenericAPIView):
         RegistrationEvent.objects.create(user=user,event=event)
         return response.Response({'status' : 'OK','result' :'Registration for the given event for the given user has been saved'},status=status.HTTP_200_OK)
 
+class UnRegisterForEventView(generics.GenericAPIView):
+    permission_classes = [AuthenticatedActivated]
+    serializer_class = RegistrationEventSerializer
+
+    def post(self,request,*args, **kwargs):
+        data = request.data
+        username = data.get('username',None)
+        event_id = data.get('event_id',None)
+        if username is None:
+            return response.Response({"status" : 'FAILED','error' :"Username has not been provided"},status=status.HTTP_400_BAD_REQUEST)
+        if event_id is None:
+            return response.Response({"status" : 'FAILED','error' :"Event_id has not been provided"},status=status.HTTP_400_BAD_REQUEST) 
+        user = User.objects.get(username=username)
+        event = Event.objects.get(id=event_id)
+        if RegistrationEvent.objects.filter(user=user,event=event).exists():
+            RegistrationEvent.objects.filter(user=user,event=event).delete()
+            return response.Response({"status" : 'OK','error' :"You have been unregistered"},status=status.HTTP_200_OK)
+        return response.Response({'status' : 'Failed','result' :'You did not register for this event'},status=status.HTTP_400_BAD_REQUEST)
 
 class CreateEventView(generics.CreateAPIView):
     permission_classes = [Hosting]
@@ -53,3 +76,13 @@ class CreateEventView(generics.CreateAPIView):
         data['user'] = self.request.user.username
         return data
 
+class EventDetailsView(generics.RetrieveAPIView):
+    permission_classes = [AuthenticatedActivated]
+    serializer_class = EventDetailserializer
+    queryset = Event.objects.all()
+    lookup_field = 'id'
+
+    def get_serializer_context(self,**kwargs):
+        data = super().get_serializer_context(**kwargs)
+        data['user'] = self.request.user.username
+        return data

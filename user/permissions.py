@@ -57,7 +57,7 @@ class Hosting(permissions.BasePermission):
             if request.user.can_host:
                 return True
             else:
-                raise ForbiddenActivation
+                raise ForbiddenHosting
         else :
             raise Forbidden
 
@@ -79,7 +79,7 @@ class AuthenticatedActivated(permissions.BasePermission):
 
     def has_permission(self,request,view):
         if request.user and request.user.is_authenticated:
-            if request.user.dtu_email:
+            if request.user.is_verified:
                 return True
             else:
                 raise ForbiddenActivation

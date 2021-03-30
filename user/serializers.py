@@ -224,7 +224,7 @@ class ProfileSerializer(serializers.ModelSerializer):
     def validate_roll_no(self,obj):
         curr_user = self.context.get('user')
         user = User.objects.get(username=curr_user)
-        if len(obj) != 11:
+        if len(obj) < 11 or len(obj) > 13:
             raise ValidationException('Roll Number is not in proper format, length ' + str(len(obj)) + ' expected : 11')
         if str(obj[:2]) != '2k' and str(obj[:2]) != '2K':
             raise ValidationException('Roll Number is not in proper format, 2K....')
