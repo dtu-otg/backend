@@ -137,7 +137,7 @@ class LoginSerializer(serializers.ModelSerializer):
             return super().validate(attrs)
         raise AuthenticationException('Invalid credentials. Try again')
 
-class RequestPasswordResetEmailSeriliazer(serializers.Serializer):
+class RequestPasswordResetEmailSerializer(serializers.Serializer):
     email = serializers.EmailField(min_length=2)
 
     class Meta:
@@ -145,44 +145,24 @@ class RequestPasswordResetEmailSeriliazer(serializers.Serializer):
 
 
     
-class ResetPasswordEmailRequestSerializer(serializers.Serializer):
-    email = serializers.EmailField(min_length=2)
-
-    redirect_url = serializers.CharField(max_length=500, required=False)
-
-    class Meta:
-        fields = ['email']
 
 class SetNewPasswordSerializer(serializers.Serializer):
     password = serializers.CharField(
         min_length=6, max_length=68, write_only=True)
-    token = serializers.CharField(
-        min_length=1, write_only=True)
-    uidb64 = serializers.CharField(
-        min_length=1, write_only=True)
+    email = serializers.EmailField(
+        min_length = 2, write_only=True)
+    code = serializers.IntegerField()
 
     class Meta:
-        fields = ['password', 'token', 'uidb64']
+        fields = ['email', 'code', 'password']
 
-    def validate(self, attrs):
-        try:
-            password = attrs.get('password')
-            token = attrs.get('token')
-            uidb64 = attrs.get('uidb64')
+class PasswordTokenCheckSerializer(serializers.Serializer):
+    email = serializers.EmailField(
+        min_length = 2, write_only=True)
+    code = serializers.IntegerField()
 
-            id = force_str(urlsafe_base64_decode(uidb64))
-            user = User.objects.get(id=id)
-            if not PasswordResetTokenGenerator().check_token(user, token):
-                raise AuthenticationException('The reset link is invalid')
-
-            user.set_password(password)
-            user.save()
-
-            return (user)
-        except Exception as e:
-            raise AuthenticationException('The reset link is invalid')
-        return super().validate(attrs)
-
+    class Meta:
+        fields = ['email', 'code',]
 
 branches = [
     'bt','ce','co','ee','ec','en','ep','it','me','ae','mc','pe','pt','se','bd'
@@ -229,6 +209,7 @@ class ProfileSerializer(serializers.ModelSerializer):
         if str(obj[:2]) != '2k' and str(obj[:2]) != '2K':
             raise ValidationException('Roll Number is not in proper format, 2K....')
         if str(obj[5:7]).lower() not in branches:
+
             raise ValidationException('Roll Number is not in proper format, branch not found')
         if int(obj[8:]) == 0:
             raise ValidationException('Roll Number is not in proper format')
