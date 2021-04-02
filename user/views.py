@@ -13,7 +13,7 @@ from .serializers import (
     )
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import User,Profile
+from .models import User,Profile,InviteOnly
 from .utils import Util
 from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
@@ -52,7 +52,12 @@ class RegisterView(generics.GenericAPIView):
         serializer.save()
         user_data = serializer.data
         user = User.objects.get(email=user_data['email'])
-        verify_code = random.randint(0,999999)
+        verify_code = str(random.randint(0,999999))
+        req = 0
+        if len(verify_code) < 6:
+            req += 6 - len(verify_code)
+        for i in range(req):
+            verify_code = '0' + verify_code
         ele = datetime.now()
         user.code = verify_code
         user.time_code = ele + timedelta(minutes=30)
@@ -164,7 +169,12 @@ class SendVerificationMail(generics.GenericAPIView):
         if not User.objects.filter(email = email).exists():
             return Response({'status' : 'FAILED','error' :'The given email does not exist'},status = status.HTTP_400_BAD_REQUEST)
         user = User.objects.get(email=email)
-        verify_code = random.randint(0,999999)
+        verify_code = str(random.randint(0,999999))
+        req = 0
+        if len(verify_code) < 6:
+            req += 6 - len(verify_code)
+        for i in range(req):
+            verify_code = '0' + verify_code
         ele = datetime.now()
         user.code = verify_code
         user.time_code = ele + timedelta(minutes=30)
@@ -191,7 +201,12 @@ class RequestPasswordResetEmail(generics.GenericAPIView):
 
         if User.objects.filter(email=email).exists():
             user = User.objects.get(email=email)
-            verify_code = random.randint(0,999999)
+            verify_code = str(random.randint(0,999999))
+            req = 0
+            if len(verify_code) < 6:
+                req += 6 - len(verify_code)
+            for i in range(req):
+                verify_code = '0' + verify_code
             ele = datetime.now()
             user.code = verify_code
             user.time_code = ele + timedelta(minutes=30)
@@ -309,3 +324,34 @@ class ChangePassword(generics.GenericAPIView):
         user.set_password(new_pass)
         user.save()
         return Response({'status' : 'OK','result' :"Password Change Complete"},status=status.HTTP_200_OK)
+
+class SendInvitesView(generics.GenericAPIView):
+
+    def post(self,request,*args, **kwargs):
+        data = request.data
+        email = data.get('email',None)
+        user = self.request.user
+        if user.invites_sent >= 2:
+            return Response({'status' : 'FAILED','error' :"You have already exhausted all your invites",'invites_left' : '0'},status=status.HTTP_400_BAD_REQUEST)
+        if email[len(email)-10:].lower() != "@dtu.ac.in":
+            return Response({'status' : 'FAILED','error' :"This email does not belong to DTU."},status=status.HTTP_400_BAD_REQUEST)
+        if InviteOnly.objects.filter(email=email).exists():
+            return Response({'status' : 'FAILED','error' :"This email already has an invite sent to it."},status=status.HTTP_400_BAD_REQUEST)
+        verify_code = str(random.randint(0,99999999))
+        req = 0
+        if len(verify_code) < 8:
+            req += 8 - len(verify_code)
+        for i in range(req):
+            verify_code = '0' + verify_code
+        ele = datetime.now()
+        email_body = {}
+        email_body['username'] = user.username
+        email_body['email'] = user.email
+        email_body['message'] = 'Activate your account by using this code'
+        email_body['code'] = verify_code
+        email_body['check'] = True
+        data = {'email_body': email_body, 'to_email': email,
+                'email_subject': 'DTU-OTG Account Activation Mail'}
+        Util.send_invite(data)
+        return Response({'status': 'OK','result' :'An activation mail has been sent this email',"invites_left" : 2 - user.invites_sent}, status=status.HTTP_200_OK)
+        

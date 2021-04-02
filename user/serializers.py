@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from rest_framework.serializers import SerializerMethodField
-from .models import User,Profile
+from .models import User,Profile,InviteOnly
 from django.contrib import auth
 from rest_framework.exceptions import AuthenticationFailed,ValidationError
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
@@ -18,15 +18,19 @@ from django.urls import reverse
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(max_length=68,min_length=6,write_only=True)
+    code = serializers.IntegerField(required = True,write_only=True)
 
     class Meta:
         model = User
-        fields = ['email','username','password']
+        fields = ['email','username','password','code']
          
     def validate(self,attrs):
         email = attrs.get('email','')
         username = attrs.get('username','')
-
+        code = attrs.get('code',None)
+        orig = InviteOnly.objects.get(email=email).otp
+        if code != otp:
+            raise ValidationException("The Code is Invalid")
         if not username.isalnum():
             raise ValidationException("The username should only contain alphanumeric characters")
         if email[len(email)-10:].lower() != "@dtu.ac.in":
@@ -92,16 +96,22 @@ class LoginSerializer(serializers.ModelSerializer):
             if not user.is_active:
                 raise AuthenticationException('Account disabled. contact admin')
             if not user.is_verified:
-                email = user.email
-                token = RefreshToken.for_user(user).access_token
-                current_site = self.context.get('current_site')
-                relative_link = reverse('email-verify')
-                absurl = 'https://' + current_site + relative_link + "?token=" + str(token)
+                verify_code = str(random.randint(0,999999))
+                req = 0
+                if len(verify_code) < 6:
+                    req += 6 - len(verify_code)
+                for i in range(req):
+                    verify_code = '0' + verify_code
+                ele = datetime.now()
+                user.code = verify_code
+                user.time_code = ele + timedelta(minutes=30)
+                user.save()
                 email_body = {}
                 email_body['username'] = user.username
-                email_body['message'] = 'Use link below to verify your email'
-                email_body['link'] = absurl
-                data = {'email_body' : email_body,'email_subject' : 'Verify your email','to_email' : user.email}
+                email_body['message'] = 'Verify your email'
+                email_body['code'] =  verify_code
+                email_body['check'] = False
+                data = {'email_body' : email_body,'email_subject' : 'DtuOtg - Email Confirmation','to_email' : user.email}
                 Util.send_email(data)
                 raise AuthenticationException('Email is not verified, A Verification Email has been sent to your email address')
             return {
@@ -117,16 +127,22 @@ class LoginSerializer(serializers.ModelSerializer):
             if not user.is_active:
                 raise AuthenticationException('Account disabled. contact admin')
             if not user.is_verified:
-                email = user.email
-                token = RefreshToken.for_user(user).access_token
-                current_site = self.context.get('current_site')
-                relative_link = reverse('email-verify')
-                absurl = 'https://' + current_site + relative_link + "?token=" + str(token)
+                verify_code = str(random.randint(0,999999))
+                req = 0
+                if len(verify_code) < 6:
+                    req += 6 - len(verify_code)
+                for i in range(req):
+                    verify_code = '0' + verify_code
+                ele = datetime.now()
+                user.code = verify_code
+                user.time_code = ele + timedelta(minutes=30)
+                user.save()
                 email_body = {}
                 email_body['username'] = user.username
-                email_body['message'] = 'Use link below to verify your email'
-                email_body['link'] = absurl
-                data = {'email_body' : email_body,'email_subject' : 'Verify your email','to_email' : user.email}
+                email_body['message'] = 'Verify your email'
+                email_body['code'] =  verify_code
+                email_body['check'] = False
+                data = {'email_body' : email_body,'email_subject' : 'DtuOtg - Email Confirmation','to_email' : user.email}
                 Util.send_email(data)
                 raise AuthenticationException('Email is not verified, A Verification Email has been sent to your email address')
             return {
@@ -151,7 +167,7 @@ class SetNewPasswordSerializer(serializers.Serializer):
         min_length=6, max_length=68, write_only=True)
     email = serializers.EmailField(
         min_length = 2, write_only=True)
-    code = serializers.IntegerField()
+    code = serializers.CharField(max_length = 6)
 
     class Meta:
         fields = ['email', 'code', 'password']
@@ -159,7 +175,7 @@ class SetNewPasswordSerializer(serializers.Serializer):
 class PasswordTokenCheckSerializer(serializers.Serializer):
     email = serializers.EmailField(
         min_length = 2, write_only=True)
-    code = serializers.IntegerField()
+    code = serializers.CharField(max_length = 6)
 
     class Meta:
         fields = ['email', 'code',]

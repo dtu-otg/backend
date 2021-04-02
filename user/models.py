@@ -41,10 +41,10 @@ class User(AbstractBaseUser,PermissionsMixin):
     auth_provider = models.CharField(
         max_length=255, blank=False,
         null=False, default='email')
-    code = models.IntegerField(blank = True,null=True)
+    code = models.CharField(max_length = 6,blank = True,null=True)
     time_code = models.DateTimeField(blank=True,null=True)
     USERNAME_FIELD = 'username'
-
+    invites_sent = models.IntegerField(default=0)
     REQUIRED_FIELDS = [ 
         'email'
     ]
@@ -80,3 +80,8 @@ class Profile(models.Model):
     def create_Profile(sender, instance, created, **kwargs):
         if created:
             Profile.objects.create(owner=instance)
+
+
+class InviteOnly(models.Model):
+    email = models.EmailField(max_length=255,unique=True,db_index=True)
+    otp = models.CharField(max_length = 8,null = True,blank=True)
