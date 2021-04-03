@@ -14,11 +14,13 @@ from .exception import *
 import re
 from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
+import random
+from datetime import datetime,timedelta
 
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(max_length=68,min_length=6,write_only=True)
-    code = serializers.IntegerField(required = True,write_only=True)
+    code = serializers.CharField(required = True,write_only=True)
 
     class Meta:
         model = User
@@ -28,8 +30,10 @@ class RegisterSerializer(serializers.ModelSerializer):
         email = attrs.get('email','')
         username = attrs.get('username','')
         code = attrs.get('code',None)
+        if not InviteOnly.objects.filter(email=email).exists():
+            raise ValidationException("The given email has not been sent an invite")
         orig = InviteOnly.objects.get(email=email).otp
-        if code != otp:
+        if code != orig:
             raise ValidationException("The Code is Invalid")
         if not username.isalnum():
             raise ValidationException("The username should only contain alphanumeric characters")
@@ -38,6 +42,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         return attrs
     
     def create(self,validated_data):
+        del validated_data['code']
         return User.objects.create_user(**validated_data)
 
 
@@ -262,3 +267,9 @@ class PasswordChangeSerializer(serializers.Serializer):
 
     class Meta:
         fields = ['old_pass','new_pass']
+
+class SendInvitesSerializer(serializers.Serializer):
+    email = serializers.EmailField(min_length = 2)
+
+    class Meta:
+        fields = ['email']

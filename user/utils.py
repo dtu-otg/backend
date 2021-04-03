@@ -16,5 +16,5 @@ class Util:
 
     def send_invite(data):
         subject = data['email_subject']
-        body = "Hi, An invite has been to you to activate your account on DTU-OTG by " + data['email_body']['username'] + "( " + data['email_body']['email'] ). + " ). " + data['email_body']['message'] + " by using this code : " + (data['email_body']['code']) + "."
+        body = "Hi, An invite has been to you to activate your account on DTU-OTG by " + data['email_body']['username'] + "( " + data['email_body']['email'] + " ). " + data['email_body']['message'] + " by using this code : " + (data['email_body']['code']) + "."
         send_mail(subject,body,EMAIL_HOST_USER,[data['to_email']])

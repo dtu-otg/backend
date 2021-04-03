@@ -9,7 +9,8 @@ from .serializers import (
     SetNewPasswordSerializer,
     SendEmailVerificationSerializer,
     PasswordChangeSerializer,
-    PasswordTokenCheckSerializer
+    PasswordTokenCheckSerializer,
+    SendInvitesSerializer
     )
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -326,6 +327,8 @@ class ChangePassword(generics.GenericAPIView):
         return Response({'status' : 'OK','result' :"Password Change Complete"},status=status.HTTP_200_OK)
 
 class SendInvitesView(generics.GenericAPIView):
+    serializer_class = SendInvitesSerializer
+    permission_classes = [AuthenticatedActivated]
 
     def post(self,request,*args, **kwargs):
         data = request.data
@@ -353,5 +356,8 @@ class SendInvitesView(generics.GenericAPIView):
         data = {'email_body': email_body, 'to_email': email,
                 'email_subject': 'DTU-OTG Account Activation Mail'}
         Util.send_invite(data)
+        InviteOnly.objects.create(email=email,otp=verify_code,sender=user.email)
+        user.invites_sent += 1
+        user.save()
         return Response({'status': 'OK','result' :'An activation mail has been sent this email',"invites_left" : 2 - user.invites_sent}, status=status.HTTP_200_OK)
         
