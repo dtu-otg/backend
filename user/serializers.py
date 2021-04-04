@@ -225,16 +225,28 @@ class ProfileSerializer(serializers.ModelSerializer):
     def validate_roll_no(self,obj):
         curr_user = self.context.get('user')
         user = User.objects.get(username=curr_user)
-        if len(obj) < 11 or len(obj) > 13:
-            raise ValidationException('Roll Number is not in proper format, length ' + str(len(obj)) + ' expected : 11')
-        if str(obj[:2]) != '2k' and str(obj[:2]) != '2K':
-            raise ValidationException('Roll Number is not in proper format, 2K....')
-        if str(obj[5:7]).lower() not in branches:
-
-            raise ValidationException('Roll Number is not in proper format, branch not found')
-        if int(obj[8:]) == 0:
-            raise ValidationException('Roll Number is not in proper format')
-        return obj
+        if len(obj) == 11:
+            if str(obj[:2]) != '2k' and str(obj[:2]) != '2K':
+                raise ValidationException('Roll Number is not in proper format, 2K....')
+            if str(obj[5:7]).lower() not in branches:
+                if str(obj[5:6]).lower() != 'a' and str(obj[5:6]).lower() != 'b': 
+                    raise ValidationException('Roll Number is not in proper format, batch not found')
+                if int(obj[6:7]) == 0:
+                    raise ValidationException('Roll Number is not in proper format, batch not found')
+            if int(obj[8:]) == 0:
+                raise ValidationException('Roll Number is not in proper format')
+            return obj
+        if len(obj) == 12:
+            if str(obj[:2]) != '2k' and str(obj[:2]) != '2K':
+                raise ValidationException('Roll Number is not in proper format, 2K....')
+            if str(obj[5:6]).lower()!='a' and str(obj[5:6]).lower()!='b':
+                raise ValidationException('Roll Number is not in proper format, batch not found')
+            if int(obj[6:8]) < 1 or int(obj[6:8]) >= 16:
+                raise ValidationException('Roll Number is not in proper format, batch not found')
+            if int(obj[9:]) == 0:
+                raise ValidationException('Roll Number is not in proper format')
+            return obj
+        raise ValidationException('Roll Number is not in proper format')
 
     def validate_year(self,obj):
         if obj >= 2000 and obj < 2050:
