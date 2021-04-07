@@ -43,12 +43,15 @@ class RegisterSerializer(serializers.ModelSerializer):
     
     def create(self,validated_data):
         del validated_data['code']
-        return User.objects.create_user(**validated_data)
+        user = User.objects.create_user(**validated_data)
+        user.is_verified = True
+        user.save()
+        return user
 
 
 class EmailVerificationSerializer(serializers.ModelSerializer):
     username = serializers.CharField(required=True)
-    code = serializers.IntegerField(required= True)
+    code = serializers.CharField(required= True)
 
     class Meta:
         model = User
