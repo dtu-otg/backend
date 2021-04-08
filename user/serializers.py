@@ -193,11 +193,11 @@ branches = [
 ]
 
 class ProfileSerializer(serializers.ModelSerializer):
-    name = serializers.CharField()
-    roll_no = serializers.CharField()
-    branch = serializers.CharField()
-    year = serializers.IntegerField()
-    batch = serializers.CharField(allow_blank = True)
+    name = serializers.CharField(required=True)
+    roll_no = serializers.CharField(required=True)
+    branch = serializers.CharField(required=True)
+    year = serializers.IntegerField(required=True)
+    batch = serializers.CharField(required = True)
     # dtu_mail_sent = serializers.SerializerMethodField()
 
     # def get_dtu_mail_sent(self,obj):
@@ -227,45 +227,48 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     def validate_roll_no(self,obj):
         curr_user = self.context.get('user')
-        user = User.objects.get(username=curr_user)
-        if len(obj) == 11:
-            if str(obj[:2]) != '2k' and str(obj[:2]) != '2K':
-                raise ValidationException('Roll Number is not in proper format, 2K....')
-            if str(obj[5:7]).lower() not in branches:
-                if str(obj[5:6]).lower() != 'a' and str(obj[5:6]).lower() != 'b': 
-                    raise ValidationException('Roll Number is not in proper format, batch not found')
-                if int(obj[6:7]) == 0:
-                    raise ValidationException('Roll Number is not in proper format, batch not found')
-            if int(obj[8:]) == 0:
-                raise ValidationException('Roll Number is not in proper format')
-            return obj
-        if len(obj) == 12:
-            if str(obj[:2]) != '2k' and str(obj[:2]) != '2K':
-                raise ValidationException('Roll Number is not in proper format, 2K....')
-            if str(obj[5:6]).lower()!='a' and str(obj[5:6]).lower()!='b':
-                raise ValidationException('Roll Number is not in proper format, batch not found')
-            if int(obj[6:8]) < 1 or int(obj[6:8]) >= 16:
-                raise ValidationException('Roll Number is not in proper format, batch not found')
-            if int(obj[9:]) == 0:
-                raise ValidationException('Roll Number is not in proper format')
-            return obj
-        raise ValidationException('Roll Number is not in proper format')
+        if len(obj) != 3:
+            raise ValidationException('Roll number is not in proper format')
+        if int(obj) == 0:
+            raise ValidationException('Roll number is not in format format')
+        return obj
+        #user = User.objects.get(username=curr_user)
+        # if len(obj) == 11:
+        #     if str(obj[:2]) != '2k' and str(obj[:2]) != '2K':
+        #         raise ValidationException('Roll Number is not in proper format, 2K....')
+        #     if str(obj[5:7]).lower() not in branches:
+        #         if str(obj[5:6]).lower() != 'a' and str(obj[5:6]).lower() != 'b': 
+        #             raise ValidationException('Roll Number is not in proper format, batch not found')
+        #         if int(obj[6:7]) == 0:
+        #             raise ValidationException('Roll Number is not in proper format, batch not found')
+        #     if int(obj[8:]) == 0:
+        #         raise ValidationException('Roll Number is not in proper format')
+        #     return obj
+        # if len(obj) == 12:
+        #     if str(obj[:2]) != '2k' and str(obj[:2]) != '2K':
+        #         raise ValidationException('Roll Number is not in proper format, 2K....')
+        #     if str(obj[5:6]).lower()!='a' and str(obj[5:6]).lower()!='b':
+        #         raise ValidationException('Roll Number is not in proper format, batch not found')
+        #     if int(obj[6:8]) < 1 or int(obj[6:8]) >= 16:
+        #         raise ValidationException('Roll Number is not in proper format, batch not found')
+        #     if int(obj[9:]) == 0:
+        #         raise ValidationException('Roll Number is not in proper format')
+        #     return obj
+        # raise ValidationException('Roll Number is not in proper format')
 
     def validate_year(self,obj):
         if obj >= 2000 and obj < 2050:
             return obj
         raise ValidationException('Year is not valid')
 
-    def validate_batch(self,obj):
-        if obj == None or obj == "":
-            return obj
-        if len(obj) != 2:
-            raise ValidationException('Batch is not correct')
-        if obj[:1].lower() < 'a' or obj[:1].lower() > 'b':
-            raise ValidationException('Batch is not correct')
-        if int(obj[1:]) == 0 or int(obj[1:]) > 16:
-            raise ValidationException('Batch is not correct')
-        return obj
+    # def validate_batch(self,obj):
+    #     # if len(obj) != 2:
+    #     #     raise ValidationException('Batch is not correct')
+    #     if obj[:1].lower() < 'a' or obj[:1].lower() > 'b':
+    #         raise ValidationException('Batch is not correct')
+    #     if int(obj[1:]) == 0 or int(obj[1:]) > 16:
+    #         raise ValidationException('Batch is not correct')
+    #     return obj
     
     def validate_branch(self,obj):
         if obj.lower() not in branches:

@@ -52,24 +52,24 @@ class RegisterView(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         user_data = serializer.data
-        user = User.objects.get(email=user_data['email'])
-        verify_code = str(random.randint(0,999999))
-        req = 0
-        if len(verify_code) < 6:
-            req += 6 - len(verify_code)
-        for i in range(req):
-            verify_code = '0' + verify_code
-        ele = datetime.now()
-        user.code = verify_code
-        user.time_code = ele + timedelta(minutes=30)
-        user.save()
-        email_body = {}
-        email_body['username'] = user.username
-        email_body['message'] = 'Verify your email'
-        email_body['code'] =  verify_code
-        email_body['check'] = False
-        data = {'email_body' : email_body,'email_subject' : 'DtuOtg - Email Confirmation','to_email' : user.email}
-        Util.send_email(data)
+        # user = User.objects.get(email=user_data['email'])
+        # verify_code = str(random.randint(0,999999))
+        # req = 0
+        # if len(verify_code) < 6:
+        #     req += 6 - len(verify_code)
+        # for i in range(req):
+        #     verify_code = '0' + verify_code
+        # ele = datetime.now()
+        # user.code = verify_code
+        # user.time_code = ele + timedelta(minutes=30)
+        # user.save()
+        # email_body = {}
+        # email_body['username'] = user.username
+        # email_body['message'] = 'Verify your email'
+        # email_body['code'] =  verify_code
+        # email_body['check'] = False
+        # data = {'email_body' : email_body,'email_subject' : 'DtuOtg - Email Confirmation','to_email' : user.email}
+        # Util.send_email(data)
         return Response({'status' : "OK",'result': user_data},status = status.HTTP_201_CREATED)
 
 # algorithm = "HS256"
