@@ -5,6 +5,14 @@ from user.models import Profile,User
 class GetEventsSerializer(serializers.ModelSerializer):
     type_event = serializers.SerializerMethodField()
     owner = serializers.SerializerMethodField()
+    registered = serializers.SerializerMethodField()
+
+
+    def get_registered(self,obj):
+        user = self.context.get('user',None)
+        if not user:
+            return False
+        return RegistrationEvent.objects.filter(user__username=user,event=obj).exists()
 
     def get_owner(self,obj):
         name = Profile.objects.get(owner=obj.owner).name
@@ -20,7 +28,7 @@ class GetEventsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Event
-        fields = ('id','owner','name','date_time','type_event',)
+        fields = ('id','owner','name','date_time','type_event','registered')
 
 class RegistrationEventSerializer(serializers.Serializer):
     username = serializers.CharField(required=True)
