@@ -39,6 +39,7 @@ from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 from datetime import datetime,timedelta
 from django.utils import timezone
+from rest_framework.parsers import MultiPartParser,FormParser
 
 class RegisterView(generics.GenericAPIView):
     serializer_class = RegisterSerializer
@@ -290,6 +291,7 @@ class ProfileGetView(ListAPIView):
 class ProfileUpdateView(UpdateAPIView):
     serializer_class = ProfileSerializer
     permission_classes = [Authenticated,IsOwner]
+    parser_classes = [MultiPartParser,FormParser]
     queryset = Profile.objects.all()
     lookup_field = "owner_id__username"
 
@@ -301,6 +303,19 @@ class ProfileUpdateView(UpdateAPIView):
 
     def get_queryset(self):
         return self.queryset.filter(owner=self.request.user)
+
+class UserProfileUpload(views.APIView):
+    permission_classes = [Authenticated]
+    parser_classes = [MultiPartParser,FormParser]
+    
+    def post(self,request,format=None):
+        print(request.data)
+        serializer = ProfileSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class ChangePassword(generics.GenericAPIView):
     permission_classes = [Authenticated]

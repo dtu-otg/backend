@@ -3,6 +3,11 @@ from django.dispatch import receiver
 from django.contrib.auth.models import AbstractBaseUser,BaseUserManager,PermissionsMixin
 from django.db.models.signals import post_save
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.utils.translation import gettext_lazy as _
+
+def upload_to(instance,filename):
+    return 'posts/{filename}'.format(filename=filename)
+
 
 class UserManager(BaseUserManager):
     def create_user(self,username,email,password=None):
@@ -72,6 +77,7 @@ class Profile(models.Model):
     batch = models.CharField(max_length=5,null = True,blank=True)
     created_at = models.DateTimeField(auto_now_add=True,null = True,blank=True)
     updated_at = models.DateTimeField(auto_now = True,null = True,blank=True)
+    image = models.ImageField(_("Image"),upload_to=upload_to,default='posts/default.jpeg')
 
     def __str__(self):
         return str(self.owner) + "'s Profile"
