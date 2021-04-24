@@ -69,12 +69,19 @@ class UnRegisterForEventView(generics.GenericAPIView):
 
 class CreateEventView(generics.CreateAPIView):
     permission_classes = [Hosting]
-    serializer_class = CreateEventSerializer
+    CreateEventSerializer
 
     def get_serializer_context(self,**kwargs):
         data = super().get_serializer_context(**kwargs)
         data['user'] = self.request.user.username
         return data
+
+    def post(self,request):
+        data = request.data
+        serializer = CreateEventSerializer(data=data)
+        if serializer.is_valid():
+            return response.Response({"status" : 'OK','error' :"New event created"},status=status.HTTP_200_OK)
+        return response.Response(serializer.errors)
 
 class EventDetailsView(generics.RetrieveAPIView):
     permission_classes = [AuthenticatedActivated]
