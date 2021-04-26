@@ -10,7 +10,8 @@ from .serializers import (
     SendEmailVerificationSerializer,
     PasswordChangeSerializer,
     PasswordTokenCheckSerializer,
-    SendInvitesSerializer
+    SendInvitesSerializer,
+    ProfileViewSerializer
     )
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -275,18 +276,17 @@ class SetNewPasswordAPIView(generics.GenericAPIView):
             return Response({'status' : 'Failed',"result" : "Incorrect code"},status=status.HTTP_400_BAD_REQUEST)
 
 
-class ProfileGetView(ListAPIView):
-    serializer_class = ProfileSerializer
-    permission_classes = [Authenticated,IsOwner]
+class ProfileGetView(generics.RetrieveAPIView):
+    serializer_class = ProfileViewSerializer
+    permission_classes = [Authenticated]
     queryset = Profile.objects.all()
+    lookup_field = "owner_id__username"
 
     def get_serializer_context(self,**kwargs):
         data = super().get_serializer_context(**kwargs)
         data['user'] = self.request.user.username
         return data
         
-    def get_queryset(self):
-        return self.queryset.filter(owner=self.request.user)
 
 class ProfileUpdateView(UpdateAPIView):
     serializer_class = ProfileSerializer

@@ -191,7 +191,23 @@ class PasswordTokenCheckSerializer(serializers.Serializer):
 branches = [
     'bt','ce','co','ee','ec','en','ep','it','me','ae','mc','pe','pt','se','bd'
 ]
+class ProfileViewSerializer(serializers.ModelSerializer):
+    who_sent = serializers.SerializerMethodField()
 
+    def get_who_sent(self,obj):
+        user = obj.owner
+        mail = user.email
+        if not InviteOnly.objects.filter(email=mail).exists():
+            return " "
+        check = InviteOnly.objects.get(email=mail)
+        if not User.objects.get(email=check.sender).exists():
+            return " "
+        find = User.objects.get(email=check.sender).username
+        return find
+
+    class Meta:
+        model = Profile
+        fields = ['name','roll_no','branch','year','batch','image','who_sent']
 class ProfileSerializer(serializers.ModelSerializer):
     name = serializers.CharField(required=True)
     roll_no = serializers.CharField(required=True)
