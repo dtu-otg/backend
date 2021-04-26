@@ -15,8 +15,8 @@ class GetEventsSerializer(serializers.ModelSerializer):
         return RegistrationEvent.objects.filter(user__username=user,event=obj).exists()
 
     def get_owner(self,obj):
-        name = Profile.objects.get(owner=obj.owner).name
-        return name
+        username = obj.owner.username
+        return username
 
     def get_type_event(self,obj):
         if obj.type_event == '1':
@@ -74,8 +74,8 @@ class EventDetailserializer(serializers.ModelSerializer):
         return RegistrationEvent.objects.filter(event = obj,user__username=user).exists()
 
     def get_owner(self,obj):
-        name = Profile.objects.get(owner=obj.owner).name
-        return name
+        username = obj.owner.username
+        return username
 
     def get_type_event(self,obj):
         if obj.type_event == '1':

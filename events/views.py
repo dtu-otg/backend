@@ -69,7 +69,6 @@ class UnRegisterForEventView(generics.GenericAPIView):
 
 class CreateEventView(generics.CreateAPIView):
     permission_classes = [Hosting]
-    CreateEventSerializer
 
     def get_serializer_context(self,**kwargs):
         data = super().get_serializer_context(**kwargs)
