@@ -1,4 +1,5 @@
 from openpyxl import load_workbook
+import os
 import json
 
 def open_spreadsheet(name):
@@ -67,7 +68,9 @@ def create_tt(sheet):
 def ttmaker(year, batchgr, batchnum, toJSON=False):
     batchgr = batchgr.strip()
     year = year.strip()
-    filename = "ttdata/" + year.upper() + "-" + batchgr.upper() + ".xlsx"
+    pwd = os.path.dirname(os.path.realpath(__file__))
+    print('Current dir: ', pwd)
+    filename = str(pwd) + "/ttdata/" + year.upper() + "-" + batchgr.upper() + ".xlsx"
     wb = open_spreadsheet(filename)
     tt = create_tt(wb[wb.sheetnames[3*(batchnum-1)]])
     if toJSON:

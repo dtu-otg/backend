@@ -26,11 +26,11 @@ urlpatterns = [
     path('auth/',include('user.urls')),
     path('events/',include('events.urls')),
     path('social_auth/',include('social_auth.urls')),
+    path('timetable/', TimeTableView.as_view(), name='timetable'),
     path('', schema_view.with_ui('swagger',
                                  cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc',
                                        cache_timeout=0), name='schema-redoc'),
-    path('timetablet/', TimeTableView, name='timetable') 
 ]
 
 urlpatterns += static(settings.MEDIA_URL,document_root = settings.MEDIA_ROOT)
