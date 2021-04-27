@@ -53,3 +53,8 @@ txaio==21.2.1
 uritemplate==3.0.1
 urllib3==1.26.3
 zope.interface==5.3.0
+openpyxl
+mysqlclient
+gunicorn
+whitenoise
+dj-database-url
