@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'user',
     'social_auth',
     'events',
+    'timetable',
 
     #installed
     'rest_framework',
