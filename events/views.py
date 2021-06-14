@@ -79,7 +79,7 @@ class CreateEventView(generics.CreateAPIView):
         data = request.data
         serializer = CreateEventSerializer(data=data)
         if serializer.is_valid():
-            return response.Response({"status" : 'OK','error' :"New event created"},status=status.HTTP_200_OK)
+            return response.Response({"status" : 'OK','result' :"New event created"},status=status.HTTP_200_OK)
         return response.Response(serializer.errors)
 
 class EventDetailsView(generics.RetrieveAPIView):
