@@ -4,6 +4,8 @@ from .models import Event,RegistrationEvent
 from django.db.models import Q
 from .serializers import *
 from user.models import User
+from rest_framework.parsers import MultiPartParser,FormParser
+
 
 class GetEventsView(generics.ListAPIView):
     serializer_class = GetEventsSerializer
@@ -69,18 +71,20 @@ class UnRegisterForEventView(generics.GenericAPIView):
 
 class CreateEventView(generics.CreateAPIView):
     permission_classes = [Hosting]
+    parser_classes = [MultiPartParser,FormParser]
+    serializer_class = CreateEventSerializer
 
     def get_serializer_context(self,**kwargs):
         data = super().get_serializer_context(**kwargs)
         data['user'] = self.request.user.username
         return data
 
-    def post(self,request):
-        data = request.data
-        serializer = CreateEventSerializer(data=data)
-        if serializer.is_valid():
-            return response.Response({"status" : 'OK','result' :"New event created"},status=status.HTTP_200_OK)
-        return response.Response(serializer.errors)
+    # def post(self,request):
+    #     data = request.data
+    #     serializer = CreateEventSerializer(data=data)
+    #     if serializer.is_valid():
+    #         return response.Response({"status" : 'OK','result' :"New event created"},status=status.HTTP_200_OK)
+    #     return response.Response(serializer.errors)
 
 class EventDetailsView(generics.RetrieveAPIView):
     permission_classes = [AuthenticatedActivated]

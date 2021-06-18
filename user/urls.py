@@ -12,7 +12,8 @@ from .views import (
      SendVerificationMail,
      CheckAuthView,
      VerifyEmailCode,
-     SendInvitesView
+     SendInvitesView,
+     UserProfileUpload
 )
 from rest_framework_simplejwt.views import TokenRefreshView
 
@@ -24,6 +25,7 @@ urlpatterns = [
     path('send-email/',SendVerificationMail.as_view(),name='send-email'),
     path('profile/view/<str:owner_id__username>',ProfileGetView.as_view(),name = "profile"),
     path('profile/<str:owner_id__username>',ProfileUpdateView.as_view(),name = "profile"),
+    path('profile/upload',UserProfileUpload.as_view(),name = "userprofileupload"),
     path('login/',LoginApiView.as_view(),name = "login"),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('request-reset-email/', RequestPasswordResetEmail.as_view(),

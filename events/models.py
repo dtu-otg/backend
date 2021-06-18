@@ -1,6 +1,11 @@
 from django.db import models
+from rest_framework.fields import _UnvalidatedField
 from user.models import User,Profile
+from django.utils.translation import gettext_lazy as _
 
+
+def upload_to(instance,filename):
+    return 'events/{filename}'.format(filename=filename)
 
 TYPE_CHOICES = (
     ("1" , "University"),
@@ -17,6 +22,7 @@ class Event(models.Model):
     date_time = models.DateTimeField(null = True,blank=True)
     duration = models.DurationField(null = True,blank=True)
     type_event = models.CharField(max_length=1,choices=TYPE_CHOICES,default='1')
+    image = models.ImageField(_("Image"),upload_to=upload_to,default='events/default.jpeg')
 
     def __str__(self):
         return self.name + " Event"
