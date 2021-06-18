@@ -45,6 +45,7 @@ class CreateEventSerializer(serializers.ModelSerializer):
     duration = serializers.DurationField(required=True)
     latitude = serializers.DecimalField(required=True,max_digits = 15,decimal_places=9)
     longitude = serializers.DecimalField(required=True,max_digits = 15,decimal_places=9)
+    image = serializers.ImageField(required=False)
     user_registered = serializers.SerializerMethodField()
 
     def get_user_registered(self,obj):
@@ -56,7 +57,7 @@ class CreateEventSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Event
-        fields = ('owner','name','description','date_time','duration','latitude','longitude','type_event','user_registered')
+        fields = ('owner','name','description','date_time','duration','latitude','longitude','type_event','user_registered','image',)
 
 
 class EventDetailserializer(serializers.ModelSerializer):
@@ -87,4 +88,4 @@ class EventDetailserializer(serializers.ModelSerializer):
 
     class Meta:
         model = Event
-        fields = ('id','owner','name','latitude','longitude','description','date_time','duration','type_event','registered','count')
+        fields = ('id','owner','name','latitude','longitude','description','date_time','duration','type_event','registered','count','image')
