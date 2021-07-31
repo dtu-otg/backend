@@ -77,6 +77,7 @@ class Profile(models.Model):
     batch = models.CharField(max_length=5,null = True,blank=True)
     created_at = models.DateTimeField(auto_now_add=True,null = True,blank=True)
     updated_at = models.DateTimeField(auto_now = True,null = True,blank=True)
+    description = models.TextField(max_length = 1000,null = True, blank = True)
     image = models.ImageField(_("Image"),upload_to=upload_to,default='posts/default.jpeg')
 
     def __str__(self):

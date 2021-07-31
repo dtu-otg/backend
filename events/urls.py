@@ -7,5 +7,7 @@ urlpatterns = [
     path('details/<int:id>',EventDetailsView.as_view(),name='event-details'),
     path('create/',CreateEventView.as_view(),name='create-events'),
     path('register/',RegisterForEventView.as_view(),name='register-events'),
-    path('unregister/',UnRegisterForEventView.as_view(),name='register-events')
+    path('unregister/',UnRegisterForEventView.as_view(),name='register-events'),
+    path('edit/<int:id>',EventsUpdateView.as_view(),name='edit'),
+    path('delete/<int:id>',EventsDeleteView.as_view(),name='delete')
 ]

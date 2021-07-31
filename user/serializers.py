@@ -207,7 +207,7 @@ class ProfileViewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ['name','roll_no','branch','year','batch','image','who_sent']
+        fields = ['name','roll_no','branch','year','batch','image','who_sent','description']
 class ProfileSerializer(serializers.ModelSerializer):
     name = serializers.CharField(required=True)
     roll_no = serializers.CharField(required=True)
@@ -293,7 +293,7 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ['name','roll_no','branch','year','batch','image']
+        fields = ['name','roll_no','branch','year','batch','image','description']
 
 class PasswordChangeSerializer(serializers.Serializer):
     old_pass = serializers.CharField(max_length = 68,min_length = 6,required=True)

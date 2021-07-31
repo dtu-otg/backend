@@ -34,3 +34,7 @@ class RegistrationEvent(models.Model):
     def __str__(self):
         return self.user.username + "'s registration for " + self.event.name
     
+    
+class Reports(models.Model):
+    event = models.ForeignKey(to=Event,on_delete=models.CASCADE)
+    count = models.IntegerField(default = 0)
