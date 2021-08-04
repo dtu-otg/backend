@@ -25,6 +25,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('auth/',include('user.urls')),
     path('events/',include('events.urls')),
+    path('projects/',include('projects.urls')),
     path('social_auth/',include('social_auth.urls')),
     path('timetable/', TimeTableView.as_view(), name='timetable'),
     path('', schema_view.with_ui('swagger',
