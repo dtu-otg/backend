@@ -200,7 +200,7 @@ class ProfileViewSerializer(serializers.ModelSerializer):
         if not InviteOnly.objects.filter(email=mail).exists():
             return " "
         check = InviteOnly.objects.get(email=mail)
-        if not User.objects.get(email=check.sender).exists():
+        if not User.objects.filter(email=check.sender).exists():
             return " "
         find = User.objects.get(email=check.sender).username
         return find
