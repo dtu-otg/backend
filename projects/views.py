@@ -20,3 +20,13 @@ class CreateProjectView(generics.CreateAPIView):
         data = super().get_serializer_context(**kwargs)
         data['user'] = self.request.user.username
         return data
+
+
+
+class ProjectDetailView(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [AuthenticatedActivated, IsOwner]
+    parser_classes = [MultiPartParser,FormParser]
+    serializer_class = CreateProjectSerializer 
+    lookup_field = "id"
+    queryset = Project.objects.all()
+    
