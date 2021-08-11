@@ -89,3 +89,11 @@ class EventDetailserializer(serializers.ModelSerializer):
     class Meta:
         model = Event
         fields = ('id','owner','name','latitude','longitude','description','date_time','duration','type_event','registered','count','image')
+        
+    
+    
+class ReportEventsSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    
+    class Meta:
+        fields = ('id',)

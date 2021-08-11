@@ -16,7 +16,7 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
 import random
 from datetime import datetime,timedelta
-
+from projects.models import *
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(max_length=68,min_length=6,write_only=True)
@@ -193,7 +193,22 @@ branches = [
 ]
 class ProfileViewSerializer(serializers.ModelSerializer):
     who_sent = serializers.SerializerMethodField()
-
+    projects = serializers.SerializerMethodField()
+    
+    def get_projects(self,obj):
+        ans = []    
+        user = self.context.get('user',None)
+        if user is None:
+            return ans
+        for ele in Project.objects.filter(owner = User.objects.get(username = user)):
+            here = {}
+            here['id'] = ele.id
+            here['name'] = ele.name
+            here['description'] = ele.description
+            ans.append(here)
+        return ans
+    
+    
     def get_who_sent(self,obj):
         user = obj.owner
         mail = user.email
@@ -207,7 +222,7 @@ class ProfileViewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ['name','roll_no','branch','year','batch','image','who_sent','description']
+        fields = ['name','roll_no','branch','year','batch','image','who_sent','description','projects']
 class ProfileSerializer(serializers.ModelSerializer):
     name = serializers.CharField(required=True)
     roll_no = serializers.CharField(required=True)

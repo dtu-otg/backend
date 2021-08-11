@@ -121,7 +121,7 @@ class EventsDeleteView(generics.DestroyAPIView):
     
 class ReportEvents(generics.GenericAPIView):
     permission_classes = [AuthenticatedActivated]
-    serializer_class = CreateEventSerializer
+    serializer_class = ReportEventsSerializer
     parser_classes = [MultiPartParser,FormParser]
     
     def post(self,request):
@@ -146,7 +146,8 @@ class ReportEvents(generics.GenericAPIView):
             email_body['message'] = 'Your event has been deleted to due widespread reporting'
             data = {'email_body': email_body, 'to_email': temp.event.owner.email,
                     'email_subject': 'Event widely reported'}
+            here.delete()
             Util.send_report(data)
-            temp.delete()
         return response.Response({"status" : 'OK','result' : "Report has been submitted"},status=status.HTTP_400_BAD_REQUEST)
+    
     

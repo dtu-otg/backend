@@ -37,3 +37,6 @@ class RegistrationEvent(models.Model):
 class Reports(models.Model):
     event = models.ForeignKey(to=Event,on_delete=models.CASCADE)
     count = models.IntegerField(default = 0)
+    
+    def __str__(self):
+        return self.event.name + "'s Report Count"

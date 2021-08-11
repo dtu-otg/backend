@@ -13,3 +13,14 @@ class CreateProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = ('owner','id','name','description','image','discord')
+        
+class GetProjectSerializer(serializers.ModelSerializer):
+    owner = serializers.SerializerMethodField()
+
+    def get_owner(self,obj):
+        username = obj.owner.username
+        return username
+
+    class Meta:
+        model = Project
+        fields = ('id','owner','name','description','discord','image')
